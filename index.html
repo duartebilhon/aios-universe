@@ -370,8 +370,18 @@ SQUADS.forEach(sq => {
     const pulseSprite = glow(makeGlowTex(sq.colorHex), 0.25, 0);
     scene.add(pulseSprite);
 
+    // Drift params — sinusoidal lateral + vertical float per agent
+    const driftAmp   = 0.4 + Math.random() * 0.5;
+    const driftFreqX = 0.06 + Math.random() * 0.08;
+    const driftFreqY = 0.05 + Math.random() * 0.07;
+    const driftFreqZ = 0.07 + Math.random() * 0.06;
+    const driftPX    = Math.random() * Math.PI * 2;
+    const driftPY    = Math.random() * Math.PI * 2;
+    const driftPZ    = Math.random() * Math.PI * 2;
+
     const ao = { group, sphere, line, pulse: pulseSprite, agent, squad: sq,
       orbitPhase, orbitRadius, orbitSpeed, inclination, orbitTiltZ,
+      driftAmp, driftFreqX, driftFreqY, driftFreqZ, driftPX, driftPY, driftPZ,
       pulseT: Math.random(), squadPos: sq.position };
 
     agentObjects.push(ao);
@@ -489,9 +499,18 @@ function animate() {
   // Agent orbits — TRUE 3D (inclination drives Y movement)
   agentObjects.forEach((ao, i) => {
     const angle = ao.orbitPhase + t * ao.orbitSpeed;
-    const x = ao.squadPos.x + Math.cos(angle) * ao.orbitRadius;
-    const y = ao.squadPos.y + Math.sin(angle) * ao.orbitRadius * Math.sin(ao.inclination);
-    const z = ao.squadPos.z + Math.sin(angle) * ao.orbitRadius * Math.cos(ao.inclination);
+    // Orbital base
+    const ox = Math.cos(angle) * ao.orbitRadius;
+    const oy = Math.sin(angle) * ao.orbitRadius * Math.sin(ao.inclination);
+    const oz = Math.sin(angle) * ao.orbitRadius * Math.cos(ao.inclination);
+    // Sinusoidal drift — lateral + vertical
+    const dx = Math.sin(t * ao.driftFreqX + ao.driftPX) * ao.driftAmp;
+    const dy = Math.sin(t * ao.driftFreqY + ao.driftPY) * ao.driftAmp * 0.7;
+    const dz = Math.cos(t * ao.driftFreqZ + ao.driftPZ) * ao.driftAmp * 0.5;
+
+    const x = ao.squadPos.x + ox + dx;
+    const y = ao.squadPos.y + oy + dy;
+    const z = ao.squadPos.z + oz + dz;
 
     ao.group.position.set(x, y, z);
 
