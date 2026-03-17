@@ -74,6 +74,39 @@
     canvas { cursor: grab; }
     canvas:active { cursor: grabbing; }
     canvas.hover { cursor: pointer; }
+
+    /* MOTION PANEL */
+    #motion-panel {
+      position: fixed;
+      left: 36px; bottom: 70px;
+      background: rgba(4,8,28,0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(120,160,255,0.12);
+      border-radius: 14px;
+      padding: 16px 20px;
+      z-index: 150;
+      width: 240px;
+    }
+    .mp-title {
+      font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+      color: rgba(255,255,255,0.3); margin-bottom: 12px;
+    }
+    .mp-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+    }
+    .mp-row:last-child { margin-bottom: 0; }
+    .mp-label { font-size: 10px; color: rgba(255,255,255,0.45); width: 68px; flex-shrink: 0; }
+    .mp-val   { font-size: 10px; color: rgba(255,255,255,0.35); width: 26px; text-align: right; flex-shrink: 0; }
+    input[type=range] {
+      flex: 1; height: 3px; appearance: none; -webkit-appearance: none;
+      background: rgba(255,255,255,0.12); border-radius: 2px; outline: none; cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 12px; height: 12px;
+      border-radius: 50%; background: #6699ff; cursor: pointer;
+    }
+    input[type=range]:hover::-webkit-slider-thumb { background: #aabbff; }
   </style>
 </head>
 <body>
@@ -108,6 +141,26 @@
 </div>
 
 <div id="hint">Clique num agente · Scroll zoom · Arraste órbita</div>
+
+<!-- MOTION CONTROLS -->
+<div id="motion-panel">
+  <div class="mp-title">MOVIMENTO</div>
+  <div class="mp-row">
+    <span class="mp-label">Horizontal</span>
+    <input type="range" id="sl-horiz" min="0" max="5" step="0.05" value="0.6">
+    <span class="mp-val" id="vl-horiz">0.6</span>
+  </div>
+  <div class="mp-row">
+    <span class="mp-label">Vertical</span>
+    <input type="range" id="sl-vert" min="0" max="5" step="0.05" value="0.4">
+    <span class="mp-val" id="vl-vert">0.4</span>
+  </div>
+  <div class="mp-row">
+    <span class="mp-label">Velocidade</span>
+    <input type="range" id="sl-speed" min="0" max="3" step="0.05" value="1">
+    <span class="mp-val" id="vl-speed">1.0</span>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -434,6 +487,21 @@ document.getElementById('sv-squads').textContent = SQUADS.length;
 // ─────────────────────────────────────────────────────────────
 //  INTERACTION
 // ─────────────────────────────────────────────────────────────
+// Motion controls
+const motion = { horiz: 0.6, vert: 0.4, speed: 1.0 };
+
+function wireSlider(id, valId, key, decimals=1) {
+  const sl = document.getElementById(id);
+  const vl = document.getElementById(valId);
+  sl.addEventListener('input', () => {
+    motion[key] = parseFloat(sl.value);
+    vl.textContent = motion[key].toFixed(decimals);
+  });
+}
+wireSlider('sl-horiz', 'vl-horiz', 'horiz', 1);
+wireSlider('sl-vert',  'vl-vert',  'vert',  1);
+wireSlider('sl-speed', 'vl-speed', 'speed', 1);
+
 const raycaster = new THREE.Raycaster();
 const mouse     = new THREE.Vector2(-9999,-9999);
 const _v        = new THREE.Vector3();
@@ -498,15 +566,15 @@ function animate() {
 
   // Agent orbits — TRUE 3D (inclination drives Y movement)
   agentObjects.forEach((ao, i) => {
-    const angle = ao.orbitPhase + t * ao.orbitSpeed;
+    const angle = ao.orbitPhase + t * ao.orbitSpeed * motion.speed;
     // Orbital base
     const ox = Math.cos(angle) * ao.orbitRadius;
     const oy = Math.sin(angle) * ao.orbitRadius * Math.sin(ao.inclination);
     const oz = Math.sin(angle) * ao.orbitRadius * Math.cos(ao.inclination);
-    // Sinusoidal drift — lateral + vertical
-    const dx = Math.sin(t * ao.driftFreqX + ao.driftPX) * ao.driftAmp;
-    const dy = Math.sin(t * ao.driftFreqY + ao.driftPY) * ao.driftAmp * 0.7;
-    const dz = Math.cos(t * ao.driftFreqZ + ao.driftPZ) * ao.driftAmp * 0.5;
+    // Sinusoidal drift — controlled by sliders
+    const dx = Math.sin(t * ao.driftFreqX * motion.speed + ao.driftPX) * ao.driftAmp * motion.horiz;
+    const dy = Math.sin(t * ao.driftFreqY * motion.speed + ao.driftPY) * ao.driftAmp * motion.vert;
+    const dz = Math.cos(t * ao.driftFreqZ * motion.speed + ao.driftPZ) * ao.driftAmp * motion.horiz;
 
     const x = ao.squadPos.x + ox + dx;
     const y = ao.squadPos.y + oy + dy;
