@@ -280,19 +280,31 @@ function makeGlowTex(hexColor) {
   const c = document.createElement('canvas');
   c.width = c.height = 128;
   const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, 128, 128); // transparent base — prevents black squares
   const col = new THREE.Color(hexColor);
   const r = Math.round(col.r*255), g = Math.round(col.g*255), b = Math.round(col.b*255);
   const grad = ctx.createRadialGradient(64,64,0, 64,64,64);
-  grad.addColorStop(0,   `rgba(${r},${g},${b},1)`);
-  grad.addColorStop(0.2, `rgba(${r},${g},${b},0.7)`);
-  grad.addColorStop(0.55,`rgba(${r},${g},${b},0.15)`);
-  grad.addColorStop(1,   `rgba(${r},${g},${b},0)`);
-  ctx.fillStyle = grad; ctx.fillRect(0,0,128,128);
-  return new THREE.CanvasTexture(c);
+  grad.addColorStop(0,    `rgba(${r},${g},${b},1)`);
+  grad.addColorStop(0.2,  `rgba(${r},${g},${b},0.7)`);
+  grad.addColorStop(0.55, `rgba(${r},${g},${b},0.15)`);
+  grad.addColorStop(1,    `rgba(${r},${g},${b},0)`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 128, 128);
+  const tex = new THREE.CanvasTexture(c);
+  tex.premultiplyAlpha = false;
+  return tex;
 }
 
 function glow(tex, scale, opacity) {
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false }));
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: tex,
+    transparent: true,
+    opacity,
+    alphaTest: 0.001,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    depthTest: false,
+  }));
   s.scale.setScalar(scale);
   return s;
 }
@@ -301,6 +313,17 @@ function glow(tex, scale, opacity) {
 //  STARFIELD
 // ─────────────────────────────────────────────────────────────
 {
+  // Circular star texture — no more black squares
+  const sc = document.createElement('canvas'); sc.width = sc.height = 32;
+  const sx = sc.getContext('2d');
+  sx.clearRect(0,0,32,32);
+  const sg = sx.createRadialGradient(16,16,0, 16,16,16);
+  sg.addColorStop(0,   'rgba(255,255,255,1)');
+  sg.addColorStop(0.4, 'rgba(255,255,255,0.6)');
+  sg.addColorStop(1,   'rgba(255,255,255,0)');
+  sx.fillStyle = sg; sx.fillRect(0,0,32,32);
+  const starTex = new THREE.CanvasTexture(sc);
+
   const N = 5000, pos = new Float32Array(N*3), col = new Float32Array(N*3);
   for (let i = 0; i < N; i++) {
     pos[i*3]   = (Math.random()-.5)*300;
@@ -312,7 +335,13 @@ function glow(tex, scale, opacity) {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
   geo.setAttribute('color',    new THREE.BufferAttribute(col,3));
-  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ size:.1, vertexColors:true, transparent:true, opacity:.9 })));
+  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+    size: 0.4, map: starTex, vertexColors: true,
+    transparent: true, opacity: 0.85,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false, alphaTest: 0.01,
+    sizeAttenuation: true
+  })));
 }
 
 // ─────────────────────────────────────────────────────────────
