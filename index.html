@@ -147,17 +147,17 @@
   <div class="mp-title">MOVIMENTO</div>
   <div class="mp-row">
     <span class="mp-label">Horizontal</span>
-    <input type="range" id="sl-horiz" min="0" max="5" step="0.05" value="0.6">
+    <input type="range" id="sl-horiz" min="0" max="20" step="0.1" value="0.6">
     <span class="mp-val" id="vl-horiz">0.6</span>
   </div>
   <div class="mp-row">
     <span class="mp-label">Vertical</span>
-    <input type="range" id="sl-vert" min="0" max="5" step="0.05" value="0.4">
+    <input type="range" id="sl-vert" min="0" max="20" step="0.1" value="0.4">
     <span class="mp-val" id="vl-vert">0.4</span>
   </div>
   <div class="mp-row">
     <span class="mp-label">Velocidade</span>
-    <input type="range" id="sl-speed" min="0" max="3" step="0.05" value="1">
+    <input type="range" id="sl-speed" min="0" max="8" step="0.1" value="1">
     <span class="mp-val" id="vl-speed">1.0</span>
   </div>
 </div>
@@ -262,15 +262,15 @@ camera.position.set(0, 10, 30);
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setSize(innerWidth, innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, 3));
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping   = true;
 controls.dampingFactor   = 0.04;
 controls.autoRotate      = true;
 controls.autoRotateSpeed = 0.1;
-controls.minDistance     = 6;
-controls.maxDistance     = 70;
+controls.minDistance     = 1;
+controls.maxDistance     = 200;
 controls.maxPolarAngle   = Math.PI * 0.88;
 
 // ─────────────────────────────────────────────────────────────
