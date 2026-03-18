@@ -58,6 +58,11 @@
     #info-card .c-desc { font-size: 12.5px; line-height: 1.8; color: rgba(255,255,255,0.62); margin-bottom: 20px; }
     #info-card .c-cmds-title { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.28); margin-bottom: 9px; }
     .cmd-tag { display: inline-block; background: rgba(100,150,255,0.1); border: 1px solid rgba(100,150,255,0.18); border-radius: 6px; padding: 4px 10px; font-size: 10px; font-family: monospace; margin: 3px; color: #88ccff; }
+    .activity-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .activity-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.28); white-space: nowrap; }
+    .activity-bar-bg { flex: 1; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+    .activity-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+    .activity-pct { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5); width: 32px; text-align: right; }
     #close-card { position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.55); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; }
     #close-card:hover { background: rgba(255,255,255,0.14); color: white; }
 
@@ -130,6 +135,11 @@
   <div class="c-role" id="c-role">—</div>
   <span class="c-squad" id="c-squad">Squad</span>
   <div class="c-desc" id="c-desc">—</div>
+  <div class="activity-row">
+    <span class="activity-label">Atividade</span>
+    <div class="activity-bar-bg"><div class="activity-bar-fill" id="c-act-fill"></div></div>
+    <span class="activity-pct" id="c-act-pct">—</span>
+  </div>
   <div class="c-cmds-title">Invocar agente</div>
   <div id="c-cmds"></div>
 </div>
@@ -169,6 +179,8 @@
 // ─────────────────────────────────────────────────────────────
 //  DATA — Squads & Agents
 // ─────────────────────────────────────────────────────────────
+// activity: 0.0 (calmo/estratégico) → 1.0 (frenético/operacional 24/7)
+// Escala orbita, drift e frequência de movimento
 const SQUADS = [
   {
     id: 'core',
@@ -177,10 +189,10 @@ const SQUADS = [
     color: 0xffaa22, colorHex: '#ffaa22', colorLight: '#ffcc66',
     coreSize: 0.7,
     agents: [
-      { name: 'Master',    role: 'AIOS Master',      icon: '🧠', desc: 'Orquestra todo o ecossistema AIOS. Coordena squads, define arquitetura e garante alinhamento estratégico.', commands: ['/agents:aios-master'] },
-      { name: 'Craft',     role: 'Squad Creator',    icon: '🏗️', desc: 'Cria e valida novos squads seguindo arquitetura task-first. Garante qualidade e estrutura do ecossistema.', commands: ['/agents:squad-creator'] },
-      { name: 'Chief',     role: 'Squad Chief',      icon: '⚡', desc: 'Lidera squads em operações complexas multi-agente. Coordena execução e entrega de projetos.', commands: ['/agents:squad-chief'] },
-      { name: 'ARES',      role: 'Agente do PC',     icon: '🔴', desc: 'Monitor inteligente do PC via WhatsApp. Recebe comandos por texto ou áudio e executa tarefas locais 24/7.', commands: ['/ares'] },
+      { name: 'Master', role: 'AIOS Master',   icon: '🧠', activity: 0.90, desc: 'Orquestra todo o ecossistema AIOS. Coordena squads, define arquitetura e garante alinhamento estratégico.', commands: ['/agents:aios-master'] },
+      { name: 'Craft',  role: 'Squad Creator', icon: '🏗️', activity: 0.55, desc: 'Cria e valida novos squads seguindo arquitetura task-first. Garante qualidade e estrutura do ecossistema.', commands: ['/agents:squad-creator'] },
+      { name: 'Chief',  role: 'Squad Chief',   icon: '⚡', activity: 0.80, desc: 'Lidera squads em operações complexas multi-agente. Coordena execução e entrega de projetos.', commands: ['/agents:squad-chief'] },
+      { name: 'ARES',   role: 'Agente do PC',  icon: '🔴', activity: 1.00, desc: 'Monitor inteligente do PC via WhatsApp. Recebe comandos por texto ou áudio e executa tarefas locais 24/7.', commands: ['/ares'] },
     ]
   },
   {
@@ -189,12 +201,12 @@ const SQUADS = [
     position: { x: -11, y: 1, z: -3 },
     color: 0x2266ff, colorHex: '#2266ff', colorLight: '#6699ff',
     agents: [
-      { name: 'Duarte',   role: 'Head Comercial',   icon: '👔', desc: 'Orquestra toda a operação comercial. Define estratégia, metas e lidera o time de vendas high ticket.', commands: ['/agents:head-comercial'] },
-      { name: 'Mariana',  role: 'Closer',            icon: '💎', desc: 'Especialista em fechamento de contratos high ticket. Converte leads qualificados em clientes.', commands: ['/agents:closer'] },
-      { name: 'Taise',    role: 'SDR',               icon: '📡', desc: 'Prospecção ativa e qualificação de leads. Aquece o pipeline e agenda reuniões estratégicas.', commands: ['/agents:sdr'] },
-      { name: 'Taynara',  role: 'Customer Success',  icon: '🌟', desc: 'Garante satisfação e retenção pós-venda. Gerencia onboarding e expansão de contas.', commands: ['/agents:cs-pos-venda'] },
-      { name: 'Letícia',  role: 'Copywriter',        icon: '✍️', desc: 'Cria copy de vendas persuasivo para e-mail, WhatsApp, landing pages e anúncios.', commands: ['/agents:copywriter-vendas'] },
-      { name: 'Peçanha',  role: 'Analista de Dados', icon: '📊', desc: 'Analisa métricas do funil, gera relatórios e insights para otimização da operação.', commands: ['/agents:analista-vendas'] },
+      { name: 'Duarte',  role: 'Head Comercial',   icon: '👔', activity: 0.55, desc: 'Orquestra toda a operação comercial. Define estratégia, metas e lidera o time de vendas high ticket.', commands: ['/agents:head-comercial'] },
+      { name: 'Mariana', role: 'Closer',            icon: '💎', activity: 0.80, desc: 'Especialista em fechamento de contratos high ticket. Converte leads qualificados em clientes.', commands: ['/agents:closer'] },
+      { name: 'Taise',   role: 'SDR',               icon: '📡', activity: 0.95, desc: 'Prospecção ativa e qualificação de leads. Aquece o pipeline e agenda reuniões estratégicas.', commands: ['/agents:sdr'] },
+      { name: 'Taynara', role: 'Customer Success',  icon: '🌟', activity: 0.65, desc: 'Garante satisfação e retenção pós-venda. Gerencia onboarding e expansão de contas.', commands: ['/agents:cs-pos-venda'] },
+      { name: 'Letícia', role: 'Copywriter',        icon: '✍️', activity: 0.75, desc: 'Cria copy de vendas persuasivo para e-mail, WhatsApp, landing pages e anúncios.', commands: ['/agents:copywriter-vendas'] },
+      { name: 'Peçanha', role: 'Analista de Dados', icon: '📊', activity: 0.45, desc: 'Analisa métricas do funil, gera relatórios e insights para otimização da operação.', commands: ['/agents:analista-vendas'] },
     ]
   },
   {
@@ -203,11 +215,11 @@ const SQUADS = [
     position: { x: 11, y: -1, z: -4 },
     color: 0xaa22ee, colorHex: '#aa22ee', colorLight: '#cc66ff',
     agents: [
-      { name: 'Marco',   role: 'Estrategista',       icon: '🎯', desc: 'Define estratégia de conteúdo: temas, calendário editorial e posicionamento nos canais digitais.', commands: ['/agents:estrategista-conteudo'] },
-      { name: 'Luna',    role: 'Roteirista',          icon: '🎬', desc: 'Escreve roteiros para vídeos, reels e apresentações com narrativa envolvente e storytelling.', commands: ['/agents:roteirista'] },
-      { name: 'Pixel',   role: 'Produtor Vídeo IA',  icon: '🎥', desc: 'Produz vídeos com HeyGen + Runway. Avatares IA, motion e edição totalmente automatizada.', commands: ['/agents:produtor-video-ia'] },
-      { name: 'Forma',   role: 'Adaptador',           icon: '🔄', desc: 'Adapta cada conteúdo para Instagram, TikTok e LinkedIn com formato nativo de cada plataforma.', commands: ['/agents:adaptador-conteudo'] },
-      { name: 'Cronos',  role: 'Publicador',          icon: '⏰', desc: 'Agenda e publica conteúdo nos melhores horários em todas as plataformas automaticamente.', commands: ['/agents:publicador'] },
+      { name: 'Marco',  role: 'Estrategista',      icon: '🎯', activity: 0.50, desc: 'Define estratégia de conteúdo: temas, calendário editorial e posicionamento nos canais digitais.', commands: ['/agents:estrategista-conteudo'] },
+      { name: 'Luna',   role: 'Roteirista',         icon: '🎬', activity: 0.70, desc: 'Escreve roteiros para vídeos, reels e apresentações com narrativa envolvente e storytelling.', commands: ['/agents:roteirista'] },
+      { name: 'Pixel',  role: 'Produtor Vídeo IA', icon: '🎥', activity: 0.85, desc: 'Produz vídeos com HeyGen + Runway. Avatares IA, motion e edição totalmente automatizada.', commands: ['/agents:produtor-video-ia'] },
+      { name: 'Forma',  role: 'Adaptador',          icon: '🔄', activity: 0.90, desc: 'Adapta cada conteúdo para Instagram, TikTok e LinkedIn com formato nativo de cada plataforma.', commands: ['/agents:adaptador-conteudo'] },
+      { name: 'Cronos', role: 'Publicador',         icon: '⏰', activity: 0.60, desc: 'Agenda e publica conteúdo nos melhores horários em todas as plataformas automaticamente.', commands: ['/agents:publicador'] },
     ]
   },
   {
@@ -216,11 +228,11 @@ const SQUADS = [
     position: { x: 2, y: 3, z: 12 },
     color: 0x22ddaa, colorHex: '#22ddaa', colorLight: '#66ffcc',
     agents: [
-      { name: 'Dex',    role: 'Dev',              icon: '💻', desc: 'Implementa funcionalidades, resolve bugs e escreve código de produção seguindo os padrões AIOS.', commands: ['/agents:dev'] },
-      { name: 'Gage',   role: 'DevOps',           icon: '🚀', desc: 'Gerencia infraestrutura, CI/CD, deploys e monitoramento de todos os sistemas AIOS.', commands: ['/agents:devops'] },
-      { name: 'Arc',    role: 'Architect',        icon: '🏛️', desc: 'Define arquitetura de sistemas, padrões técnicos e decisões de design de alto nível.', commands: ['/agents:architect'] },
-      { name: 'Quinn',  role: 'QA',               icon: '🔍', desc: 'Revisa código, cria testes e garante qualidade antes de qualquer entrega ao usuário.', commands: ['/agents:qa'] },
-      { name: 'DataE',  role: 'Data Engineer',    icon: '🗄️', desc: 'Constrói pipelines de dados, integra APIs e garante que os dados fluam corretamente entre sistemas.', commands: ['/agents:data-engineer'] },
+      { name: 'Dex',   role: 'Dev',           icon: '💻', activity: 0.88, desc: 'Implementa funcionalidades, resolve bugs e escreve código de produção seguindo os padrões AIOS.', commands: ['/agents:dev'] },
+      { name: 'Gage',  role: 'DevOps',        icon: '🚀', activity: 0.75, desc: 'Gerencia infraestrutura, CI/CD, deploys e monitoramento de todos os sistemas AIOS.', commands: ['/agents:devops'] },
+      { name: 'Arc',   role: 'Architect',     icon: '🏛️', activity: 0.40, desc: 'Define arquitetura de sistemas, padrões técnicos e decisões de design de alto nível.', commands: ['/agents:architect'] },
+      { name: 'Quinn', role: 'QA',            icon: '🔍', activity: 0.82, desc: 'Revisa código, cria testes e garante qualidade antes de qualquer entrega ao usuário.', commands: ['/agents:qa'] },
+      { name: 'DataE', role: 'Data Engineer', icon: '🗄️', activity: 0.72, desc: 'Constrói pipelines de dados, integra APIs e garante que os dados fluam corretamente entre sistemas.', commands: ['/agents:data-engineer'] },
     ]
   },
   {
@@ -229,10 +241,10 @@ const SQUADS = [
     position: { x: -4, y: -2, z: 11 },
     color: 0xff4488, colorHex: '#ff4488', colorLight: '#ff88bb',
     agents: [
-      { name: 'PM',      role: 'Product Manager',  icon: '📋', desc: 'Define roadmap, prioriza features e alinha produto com objetivos de negócio.', commands: ['/agents:pm'] },
-      { name: 'PO',      role: 'Product Owner',    icon: '🎯', desc: 'Gerencia backlog, escreve user stories e garante entrega de valor incremental.', commands: ['/agents:po'] },
-      { name: 'SM',      role: 'Scrum Master',     icon: '🔁', desc: 'Facilita cerimônias ágeis, remove impedimentos e protege o time de distrações externas.', commands: ['/agents:sm'] },
-      { name: 'Ana',     role: 'Analyst',          icon: '📈', desc: 'Analisa dados de produto, comportamento do usuário e gera insights para decisões estratégicas.', commands: ['/agents:analyst'] },
+      { name: 'PM',  role: 'Product Manager', icon: '📋', activity: 0.58, desc: 'Define roadmap, prioriza features e alinha produto com objetivos de negócio.', commands: ['/agents:pm'] },
+      { name: 'PO',  role: 'Product Owner',   icon: '🎯', activity: 0.78, desc: 'Gerencia backlog, escreve user stories e garante entrega de valor incremental.', commands: ['/agents:po'] },
+      { name: 'SM',  role: 'Scrum Master',    icon: '🔁', activity: 0.52, desc: 'Facilita cerimônias ágeis, remove impedimentos e protege o time de distrações externas.', commands: ['/agents:sm'] },
+      { name: 'Ana', role: 'Analyst',         icon: '📈', activity: 0.48, desc: 'Analisa dados de produto, comportamento do usuário e gera insights para decisões estratégicas.', commands: ['/agents:analyst'] },
     ]
   },
 ];
@@ -420,9 +432,11 @@ SQUADS.forEach(sq => {
   const n = sq.agents.length;
   sq.agents.forEach((agent, i) => {
     // Orbital parameters — fully 3D
+    const act = agent.activity ?? 0.5;                              // 0–1 workload
+    const actScale = 0.35 + act * 1.3;                             // 0.35× (calmo) → 1.65× (frenético)
     const orbitRadius = 2.4 + (i % 3) * 0.75;
     const orbitPhase  = (i / n) * Math.PI * 2 + Math.random() * 0.5;
-    const orbitSpeed  = 0.09 + i * 0.015 + Math.random() * 0.02;
+    const orbitSpeed  = (0.06 + Math.random() * 0.015) * actScale;
     // KEY: inclination gives true 3D up/down movement
     const inclination = (Math.random() - 0.5) * Math.PI * 0.9;  // -81° to +81°
     const orbitTiltZ  = (Math.random() - 0.5) * 0.6;
@@ -460,11 +474,11 @@ SQUADS.forEach(sq => {
     const pulseSprite = glow(makeGlowTex(sq.colorHex), 0.25, 0);
     scene.add(pulseSprite);
 
-    // Drift params — sinusoidal lateral + vertical float per agent
-    const driftAmp   = 0.4 + Math.random() * 0.5;
-    const driftFreqX = 0.06 + Math.random() * 0.08;
-    const driftFreqY = 0.05 + Math.random() * 0.07;
-    const driftFreqZ = 0.07 + Math.random() * 0.06;
+    // Drift params — sinusoidal lateral + vertical float, escalados por activity
+    const driftAmp   = (0.25 + Math.random() * 0.3) * actScale;
+    const driftFreqX = (0.04 + Math.random() * 0.05) * actScale;
+    const driftFreqY = (0.03 + Math.random() * 0.04) * actScale;
+    const driftFreqZ = (0.04 + Math.random() * 0.04) * actScale;
     const driftPX    = Math.random() * Math.PI * 2;
     const driftPY    = Math.random() * Math.PI * 2;
     const driftPZ    = Math.random() * Math.PI * 2;
@@ -572,6 +586,13 @@ function openCard(ao) {
   sqEl.style.color      = ao.squad.colorLight;
   sqEl.style.border     = '1px solid ' + ao.squad.colorHex + '44';
   document.getElementById('c-cmds').innerHTML = ao.agent.commands.map(c=>`<span class="cmd-tag">${c}</span>`).join('');
+  const act = ao.agent.activity ?? 0.5;
+  const pct = Math.round(act * 100);
+  // cor da barra: verde (baixo) → amarelo → vermelho (alto)
+  const barColor = act < 0.5 ? `hsl(${120 - act*60},70%,50%)` : `hsl(${120 - act*120},80%,55%)`;
+  document.getElementById('c-act-fill').style.width  = pct + '%';
+  document.getElementById('c-act-fill').style.background = barColor;
+  document.getElementById('c-act-pct').textContent   = pct + '%';
   document.getElementById('info-card').classList.add('open');
 }
 
