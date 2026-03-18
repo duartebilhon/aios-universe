@@ -119,7 +119,7 @@ const SQUADS = [
   {
     id:'core', name:'AIOS Core', roomName:'Command Center',
     color:0xffaa22, colorHex:'#ffaa22', colorLight:'#ffcc66',
-    rx:0, rz:0, rw:8, rd:8,
+    rx:0, rz:0, rw:6, rd:6,
     agents:[
       {name:'Master',role:'AIOS Master',  icon:'🧠',activity:0.90,desc:'Orquestra todo o ecossistema AIOS. Coordena squads, define arquitetura e garante alinhamento estratégico.',commands:['/agents:aios-master']},
       {name:'Craft', role:'Squad Creator',icon:'🏗️',activity:0.55,desc:'Cria e valida novos squads seguindo arquitetura task-first.',commands:['/agents:squad-creator']},
@@ -130,7 +130,7 @@ const SQUADS = [
   {
     id:'comercial', name:'Time Comercial', roomName:'Sales Floor',
     color:0x2266ff, colorHex:'#2266ff', colorLight:'#6699ff',
-    rx:-10, rz:-8, rw:7, rd:7,
+    rx:-7, rz:-6, rw:5, rd:5,
     agents:[
       {name:'Duarte', role:'Head Comercial',  icon:'👔',activity:0.55,desc:'Orquestra toda a operação comercial. Define estratégia e metas.',commands:['/agents:head-comercial']},
       {name:'Mariana',role:'Closer',           icon:'💎',activity:0.80,desc:'Fechamento de contratos high ticket.',commands:['/agents:closer']},
@@ -143,7 +143,7 @@ const SQUADS = [
   {
     id:'content', name:'Content Creator', roomName:'Creative Studio',
     color:0xaa22ee, colorHex:'#aa22ee', colorLight:'#cc66ff',
-    rx:10, rz:-8, rw:7, rd:7,
+    rx:7, rz:-6, rw:5, rd:5,
     agents:[
       {name:'Marco', role:'Estrategista',     icon:'🎯',activity:0.50,desc:'Estratégia de conteúdo e calendário editorial.',commands:['/agents:estrategista-conteudo']},
       {name:'Luna',  role:'Roteirista',        icon:'🎬',activity:0.70,desc:'Roteiros e storytelling envolvente.',commands:['/agents:roteirista']},
@@ -155,7 +155,7 @@ const SQUADS = [
   {
     id:'dev', name:'Dev Squad', roomName:'Tech Lab',
     color:0x22ddaa, colorHex:'#22ddaa', colorLight:'#66ffcc',
-    rx:10, rz:8, rw:7, rd:7,
+    rx:7, rz:6, rw:5, rd:5,
     agents:[
       {name:'Dex',  role:'Dev',          icon:'💻',activity:0.88,desc:'Código de produção, features e bugs.',commands:['/agents:dev']},
       {name:'Gage', role:'DevOps',       icon:'🚀',activity:0.75,desc:'Infra, CI/CD e monitoramento.',commands:['/agents:devops']},
@@ -167,7 +167,7 @@ const SQUADS = [
   {
     id:'product', name:'Product Squad', roomName:'Product Lab',
     color:0xff4488, colorHex:'#ff4488', colorLight:'#ff88bb',
-    rx:-10, rz:8, rw:7, rd:7,
+    rx:-7, rz:6, rw:5, rd:5,
     agents:[
       {name:'PM', role:'Product Manager',icon:'📋',activity:0.58,desc:'Roadmap, prioridades e alinhamento de produto.',commands:['/agents:pm']},
       {name:'PO', role:'Product Owner',  icon:'🎯',activity:0.78,desc:'Backlog e entrega de valor incremental.',commands:['/agents:po']},
@@ -178,7 +178,7 @@ const SQUADS = [
   {
     id:'design', name:'Design System', roomName:'Design Studio',
     color:0xddaa00, colorHex:'#ddaa00', colorLight:'#ffcc44',
-    rx:0, rz:-15, rw:9, rd:6,
+    rx:0, rz:-11, rw:7, rd:4,
     agents:[
       {name:'Chief-DS',role:'DS Orchestrator',  icon:'🎨',activity:0.72,desc:'Orquestra o Design System AIOS. Roteia requests e garante consistência visual.',commands:['/agents:design-chief']},
       {name:'Brad',    role:'DS Architect',     icon:'⚛️',activity:0.68,desc:'Atomic Design e refatoração de design systems. Padrões e componentes escaláveis.',commands:['/agents:brad-frost']},
@@ -193,7 +193,7 @@ const SQUADS = [
   {
     id:'procustomer', name:'ProCustomer', roomName:'Automation Hub',
     color:0xff6611, colorHex:'#ff6611', colorLight:'#ff9944',
-    rx:-16, rz:0, rw:7, rd:8,
+    rx:-12, rz:0, rw:5, rd:6,
     agents:[
       {name:'Bilhon',  role:'CRM Specialist',  icon:'🏗️',activity:0.75,desc:'Implantação e otimização de CRM. Processos de relacionamento com cliente.',commands:['/agents:crm-bilhon']},
       {name:'N8N',     role:'N8N Integrator',  icon:'🔗',activity:0.88,desc:'Automações, workflows e integrações sem código via N8N.',commands:['/agents:n8n-integrator']},
@@ -205,7 +205,7 @@ const SQUADS = [
   {
     id:'specialops', name:'Special Ops', roomName:'Special Ops',
     color:0x7799bb, colorHex:'#7799bb', colorLight:'#aaccee',
-    rx:16, rz:0, rw:7, rd:8,
+    rx:12, rz:0, rw:5, rd:6,
     agents:[
       {name:'Vox',    role:'TikTok Shop IA',  icon:'🎵',activity:0.78,desc:'Especialista TikTok Shop IA. Opera Achados Virais e conteúdo para e-commerce.',commands:['/agents:vox']},
       {name:'Banana', role:'AI Image Gen',    icon:'🍌',activity:0.72,desc:'Geração de imagens IA via Gemini/OpenRouter. Prompts SCDS, PRIO e BATCH.',commands:['/agents:nano-banana-generator']},
@@ -285,7 +285,7 @@ function glow(tex, scale, opacity) {
   const ftex = new THREE.CanvasTexture(fc);
   ftex.wrapS = ftex.wrapT = THREE.RepeatWrapping; ftex.repeat.set(10,8);
   const fl = new THREE.Mesh(
-    new THREE.PlaneGeometry(56, 44),
+    new THREE.PlaneGeometry(40, 32),
     new THREE.MeshBasicMaterial({ map: ftex })
   );
   fl.rotation.x = -Math.PI/2;
@@ -367,8 +367,8 @@ SQUADS.forEach(sq => {
     const ci = i % nc, ri = Math.floor(i / nc);
     let dx = sq.rx - (nc-1)*1.8/2 + ci*1.8;
     let dz = sq.rz - (nr-1)*1.8/2 + ri*1.8;
-    dx = Math.max(sq.rx-hw+1.4, Math.min(sq.rx+hw-1.4, dx));
-    dz = Math.max(sq.rz-hd+1.4, Math.min(sq.rz+hd-1.4, dz));
+    dx = Math.max(sq.rx-hw+0.7, Math.min(sq.rx+hw-0.7, dx));
+    dz = Math.max(sq.rz-hd+0.7, Math.min(sq.rz+hd-0.7, dz));
 
     const desk = new THREE.Mesh(
       new THREE.BoxGeometry(1.0, 0.08, 0.6),
