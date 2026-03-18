@@ -324,24 +324,32 @@ function glow(tex, scale, opacity) {
   sx.fillStyle = sg; sx.fillRect(0,0,32,32);
   const starTex = new THREE.CanvasTexture(sc);
 
-  const N = 5000, pos = new Float32Array(N*3), col = new Float32Array(N*3);
-  for (let i = 0; i < N; i++) {
-    pos[i*3]   = (Math.random()-.5)*300;
-    pos[i*3+1] = (Math.random()-.5)*300;
-    pos[i*3+2] = (Math.random()-.5)*300;
-    const v = .4+Math.random()*.6;
-    col[i*3]=v*(.6+Math.random()*.4); col[i*3+1]=v*(.6+Math.random()*.4); col[i*3+2]=v;
+  function makeStarLayer(count, spread, size, opacity) {
+    const pos = new Float32Array(count*3), col = new Float32Array(count*3);
+    for (let i = 0; i < count; i++) {
+      pos[i*3]   = (Math.random()-.5)*spread;
+      pos[i*3+1] = (Math.random()-.5)*spread;
+      pos[i*3+2] = (Math.random()-.5)*spread;
+      const v = .5+Math.random()*.5;
+      col[i*3]=v*(.7+Math.random()*.3); col[i*3+1]=v*(.7+Math.random()*.3); col[i*3+2]=v;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+    geo.setAttribute('color',    new THREE.BufferAttribute(col,3));
+    scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+      size, map: starTex, vertexColors: true,
+      transparent: true, opacity,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false, alphaTest: 0.01,
+      sizeAttenuation: true
+    })));
   }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
-  geo.setAttribute('color',    new THREE.BufferAttribute(col,3));
-  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
-    size: 0.4, map: starTex, vertexColors: true,
-    transparent: true, opacity: 0.85,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false, alphaTest: 0.01,
-    sizeAttenuation: true
-  })));
+
+  // Camadas de profundidade: distantes (pequenas) → próximas (grandes)
+  makeStarLayer(4000, 300, 0.35, 0.7);   // fundo — miúdas e distantes
+  makeStarLayer(800,  200, 0.9,  0.85);  // camada média
+  makeStarLayer(200,  150, 1.8,  0.9);   // próximas — notáveis
+  makeStarLayer(40,   100, 3.2,  0.95);  // bem próximas — grandes e brilhantes
 }
 
 // ─────────────────────────────────────────────────────────────
