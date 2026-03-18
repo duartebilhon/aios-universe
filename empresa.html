@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIOS — Company Intelligence Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #080c14; overflow: hidden; font-family: 'Inter', sans-serif; color: white; }
+    canvas { display: block; cursor: grab; }
+    canvas:active { cursor: grabbing; }
+    canvas.hover { cursor: pointer; }
+
+    #header {
+      position: fixed; top: 0; left: 0; right: 0;
+      padding: 22px 36px;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      z-index: 100; pointer-events: none;
+      background: linear-gradient(to bottom, rgba(8,12,20,0.95) 0%, transparent 100%);
+    }
+    #header h1 { font-size: 24px; font-weight: 900; letter-spacing: 6px; text-transform: uppercase; background: linear-gradient(90deg, #fff 0%, #88aaff 50%, #cc66ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    #header .subtitle { font-size: 10px; letter-spacing: 3px; color: rgba(255,255,255,0.3); text-transform: uppercase; margin-top: 4px; }
+    #header .powered { text-align: right; }
+    #header .powered .lbl { font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.25); text-transform: uppercase; }
+    #header .powered .brand { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.55); }
+
+    #view-toggle {
+      position: fixed; top: 22px; left: 50%; transform: translateX(-50%);
+      display: flex; z-index: 200; pointer-events: all;
+      border: 1px solid rgba(120,160,255,0.2); border-radius: 10px; overflow: hidden;
+    }
+    .vt-btn { padding: 8px 20px; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: rgba(4,8,28,0.85); color: rgba(255,255,255,0.4); border: none; cursor: pointer; transition: all 0.25s; font-family: 'Inter', sans-serif; }
+    .vt-btn.active { background: rgba(80,120,255,0.25); color: white; }
+    .vt-btn:hover:not(.active) { background: rgba(80,120,255,0.12); color: rgba(255,255,255,0.7); }
+
+    .agent-label { position: fixed; pointer-events: none; text-align: center; transform: translate(-50%, -100%); z-index: 50; transition: opacity 0.3s; }
+    .agent-label .a-icon { font-size: 13px; display: block; margin-bottom: 1px; }
+    .agent-label .a-name { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; }
+    .agent-label .a-role { font-size: 7px; color: rgba(255,255,255,0.35); letter-spacing: 0.5px; white-space: nowrap; }
+
+    .dept-label { position: fixed; pointer-events: none; text-align: center; transform: translate(-50%, -50%); z-index: 45; }
+    .dept-label .d-name { font-size: 11px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; opacity: 0.5; white-space: nowrap; }
+    .dept-label .d-sub  { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.25; margin-top: 3px; }
+
+    #info-card {
+      position: fixed; right: -400px; top: 50%; transform: translateY(-50%);
+      width: 330px; background: rgba(4,8,28,0.92); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+      border: 1px solid rgba(120,160,255,0.13); border-radius: 20px; padding: 30px; z-index: 200;
+      transition: right 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    #info-card.open { right: 28px; }
+    #info-card .c-icon  { font-size: 42px; margin-bottom: 12px; display: block; }
+    #info-card .c-name  { font-size: 24px; font-weight: 800; margin-bottom: 3px; }
+    #info-card .c-role  { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.38); margin-bottom: 13px; }
+    #info-card .c-squad { display: inline-block; padding: 4px 13px; border-radius: 20px; font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; }
+    #info-card .c-desc  { font-size: 12.5px; line-height: 1.8; color: rgba(255,255,255,0.62); margin-bottom: 20px; }
+    .activity-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .activity-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.28); white-space: nowrap; }
+    .activity-bar-bg { flex: 1; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+    .activity-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+    .activity-pct { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5); width: 32px; text-align: right; }
+    #info-card .c-cmds-title { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.28); margin-bottom: 9px; }
+    .cmd-tag { display: inline-block; background: rgba(100,150,255,0.1); border: 1px solid rgba(100,150,255,0.18); border-radius: 6px; padding: 4px 10px; font-size: 10px; font-family: monospace; margin: 3px; color: #88ccff; }
+    #close-card { position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.55); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+    #close-card:hover { background: rgba(255,255,255,0.14); color: white; }
+
+    #stats { position: fixed; bottom: 28px; left: 36px; display: flex; gap: 28px; pointer-events: none; }
+    .stat .val { font-size: 20px; font-weight: 800; background: linear-gradient(90deg,#88aaff,#cc66ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat .key { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.28); }
+
+    #hint { position: fixed; bottom: 28px; right: 36px; font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.18); text-transform: uppercase; pointer-events: none; animation: blink 5s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:.18} 50%{opacity:.55} }
+  </style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="header">
+  <div><h1>AIOS</h1><div class="subtitle">Company Intelligence Hub</div></div>
+  <div class="powered"><div class="lbl">Powered by</div><div class="brand">ProCustomer AI</div></div>
+</div>
+
+<div id="view-toggle">
+  <button class="vt-btn" onclick="location.href='index.html'">🌌 Universo</button>
+  <button class="vt-btn active">🏢 Empresa</button>
+</div>
+
+<div id="info-card">
+  <button id="close-card">✕</button>
+  <span class="c-icon" id="c-icon">🤖</span>
+  <div class="c-name" id="c-name">—</div>
+  <div class="c-role" id="c-role">—</div>
+  <span class="c-squad" id="c-squad">Squad</span>
+  <div class="c-desc" id="c-desc">—</div>
+  <div class="activity-row">
+    <span class="activity-label">Atividade</span>
+    <div class="activity-bar-bg"><div class="activity-bar-fill" id="c-act-fill"></div></div>
+    <span class="activity-pct" id="c-act-pct">—</span>
+  </div>
+  <div class="c-cmds-title">Invocar agente</div>
+  <div id="c-cmds"></div>
+</div>
+
+<div id="stats">
+  <div class="stat"><div class="val" id="sv-agents">—</div><div class="key">Agentes</div></div>
+  <div class="stat"><div class="val" id="sv-squads">—</div><div class="key">Setores</div></div>
+  <div class="stat"><div class="val">24/7</div><div class="key">Operando</div></div>
+</div>
+
+<div id="hint">Clique num agente · Scroll zoom · Arraste para girar</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+// ─────────────────────────────────────────────────────────────
+//  DATA
+// ─────────────────────────────────────────────────────────────
+const SQUADS = [
+  {
+    id: 'core', name: 'AIOS Core', roomName: 'Command Center',
+    color: 0xffaa22, colorHex: '#ffaa22', colorLight: '#ffcc66',
+    roomPos: { x: 0, z: 0 }, roomSize: { w: 14, d: 14 },
+    agents: [
+      { name: 'Master', role: 'AIOS Master',   icon: '🧠', activity: 0.90, desc: 'Orquestra todo o ecossistema AIOS. Coordena squads, define arquitetura e garante alinhamento estratégico.', commands: ['/agents:aios-master'] },
+      { name: 'Craft',  role: 'Squad Creator', icon: '🏗️', activity: 0.55, desc: 'Cria e valida novos squads seguindo arquitetura task-first.', commands: ['/agents:squad-creator'] },
+      { name: 'Chief',  role: 'Squad Chief',   icon: '⚡', activity: 0.80, desc: 'Lidera squads em operações complexas multi-agente.', commands: ['/agents:squad-chief'] },
+      { name: 'ARES',   role: 'Agente do PC',  icon: '🔴', activity: 1.00, desc: 'Monitor inteligente do PC via WhatsApp. Executa tarefas locais 24/7.', commands: ['/ares'] },
+    ]
+  },
+  {
+    id: 'comercial', name: 'Time Comercial', roomName: 'Sales Floor',
+    color: 0x2266ff, colorHex: '#2266ff', colorLight: '#6699ff',
+    roomPos: { x: -16, z: -12 }, roomSize: { w: 12, d: 12 },
+    agents: [
+      { name: 'Duarte',  role: 'Head Comercial',   icon: '👔', activity: 0.55, desc: 'Orquestra toda a operação comercial. Define estratégia e metas.', commands: ['/agents:head-comercial'] },
+      { name: 'Mariana', role: 'Closer',            icon: '💎', activity: 0.80, desc: 'Fechamento de contratos high ticket.', commands: ['/agents:closer'] },
+      { name: 'Taise',   role: 'SDR',               icon: '📡', activity: 0.95, desc: 'Prospecção ativa e qualificação de leads. Não para nunca.', commands: ['/agents:sdr'] },
+      { name: 'Taynara', role: 'Customer Success',  icon: '🌟', activity: 0.65, desc: 'Satisfação e retenção pós-venda.', commands: ['/agents:cs-pos-venda'] },
+      { name: 'Letícia', role: 'Copywriter',        icon: '✍️', activity: 0.75, desc: 'Copy persuasivo para todos os canais.', commands: ['/agents:copywriter-vendas'] },
+      { name: 'Peçanha', role: 'Analista de Dados', icon: '📊', activity: 0.45, desc: 'Métricas, relatórios e insights do funil.', commands: ['/agents:analista-vendas'] },
+    ]
+  },
+  {
+    id: 'content', name: 'Content Creator', roomName: 'Creative Studio',
+    color: 0xaa22ee, colorHex: '#aa22ee', colorLight: '#cc66ff',
+    roomPos: { x: 16, z: -12 }, roomSize: { w: 12, d: 12 },
+    agents: [
+      { name: 'Marco',  role: 'Estrategista',      icon: '🎯', activity: 0.50, desc: 'Estratégia de conteúdo e calendário editorial.', commands: ['/agents:estrategista-conteudo'] },
+      { name: 'Luna',   role: 'Roteirista',         icon: '🎬', activity: 0.70, desc: 'Roteiros e storytelling envolvente.', commands: ['/agents:roteirista'] },
+      { name: 'Pixel',  role: 'Produtor Vídeo IA', icon: '🎥', activity: 0.85, desc: 'Vídeos com HeyGen + Runway totalmente automatizados.', commands: ['/agents:produtor-video-ia'] },
+      { name: 'Forma',  role: 'Adaptador',          icon: '🔄', activity: 0.90, desc: 'Adapta conteúdo para cada plataforma.', commands: ['/agents:adaptador-conteudo'] },
+      { name: 'Cronos', role: 'Publicador',         icon: '⏰', activity: 0.60, desc: 'Agenda e publica nos melhores horários.', commands: ['/agents:publicador'] },
+    ]
+  },
+  {
+    id: 'dev', name: 'Dev Squad', roomName: 'Tech Lab',
+    color: 0x22ddaa, colorHex: '#22ddaa', colorLight: '#66ffcc',
+    roomPos: { x: 16, z: 12 }, roomSize: { w: 12, d: 12 },
+    agents: [
+      { name: 'Dex',   role: 'Dev',           icon: '💻', activity: 0.88, desc: 'Código de produção, features e bugs.', commands: ['/agents:dev'] },
+      { name: 'Gage',  role: 'DevOps',        icon: '🚀', activity: 0.75, desc: 'Infra, CI/CD e monitoramento.', commands: ['/agents:devops'] },
+      { name: 'Arc',   role: 'Architect',     icon: '🏛️', activity: 0.40, desc: 'Arquitetura de sistemas e decisões técnicas.', commands: ['/agents:architect'] },
+      { name: 'Quinn', role: 'QA',            icon: '🔍', activity: 0.82, desc: 'Qualidade, testes e revisão de código.', commands: ['/agents:qa'] },
+      { name: 'DataE', role: 'Data Engineer', icon: '🗄️', activity: 0.72, desc: 'Pipelines de dados e integração de APIs.', commands: ['/agents:data-engineer'] },
+    ]
+  },
+  {
+    id: 'product', name: 'Product Squad', roomName: 'Product Lab',
+    color: 0xff4488, colorHex: '#ff4488', colorLight: '#ff88bb',
+    roomPos: { x: -16, z: 12 }, roomSize: { w: 12, d: 12 },
+    agents: [
+      { name: 'PM',  role: 'Product Manager', icon: '📋', activity: 0.58, desc: 'Roadmap, prioridades e alinhamento de produto.', commands: ['/agents:pm'] },
+      { name: 'PO',  role: 'Product Owner',   icon: '🎯', activity: 0.78, desc: 'Backlog e entrega de valor incremental.', commands: ['/agents:po'] },
+      { name: 'SM',  role: 'Scrum Master',    icon: '🔁', activity: 0.52, desc: 'Cerimônias ágeis e remoção de impedimentos.', commands: ['/agents:sm'] },
+      { name: 'Ana', role: 'Analyst',         icon: '📈', activity: 0.48, desc: 'Dados de produto e insights estratégicos.', commands: ['/agents:analyst'] },
+    ]
+  },
+];
+
+// ─────────────────────────────────────────────────────────────
+//  SCENE
+// ─────────────────────────────────────────────────────────────
+const canvas   = document.getElementById('c');
+const scene    = new THREE.Scene();
+scene.background = new THREE.Color(0x080c14);
+scene.fog        = new THREE.FogExp2(0x080c14, 0.009);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 500);
+camera.position.set(0, 42, 42);
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping   = true;
+controls.dampingFactor   = 0.06;
+controls.autoRotate      = true;
+controls.autoRotateSpeed = 0.2;
+controls.minDistance     = 12;
+controls.maxDistance     = 90;
+controls.maxPolarAngle   = Math.PI * 0.46;
+controls.minPolarAngle   = Math.PI * 0.06;
+controls.target.set(0, 0, 0);
+
+// ─────────────────────────────────────────────────────────────
+//  LIGHTS
+// ─────────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0x1a2040, 4));
+
+const sun = new THREE.DirectionalLight(0xffffff, 0.7);
+sun.position.set(20, 45, 20);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = sun.shadow.camera.bottom = -45;
+sun.shadow.camera.right = sun.shadow.camera.top = 45;
+sun.shadow.camera.far = 120;
+scene.add(sun);
+
+SQUADS.forEach(sq => {
+  const pl = new THREE.PointLight(sq.color, 0.5, 18);
+  pl.position.set(sq.roomPos.x, 5, sq.roomPos.z);
+  scene.add(pl);
+});
+
+// ─────────────────────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────────────────────
+function makeGlowTex(hex) {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0,0,64,64);
+  const col = new THREE.Color(hex);
+  const r=Math.round(col.r*255), g=Math.round(col.g*255), b=Math.round(col.b*255);
+  const gr = ctx.createRadialGradient(32,32,0,32,32,32);
+  gr.addColorStop(0,   `rgba(${r},${g},${b},1)`);
+  gr.addColorStop(0.35,`rgba(${r},${g},${b},0.55)`);
+  gr.addColorStop(1,   `rgba(${r},${g},${b},0)`);
+  ctx.fillStyle = gr; ctx.fillRect(0,0,64,64);
+  const t = new THREE.CanvasTexture(c); t.premultiplyAlpha = false; return t;
+}
+
+function glowSprite(tex, scale, opacity) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, alphaTest: 0.001 }));
+  s.scale.setScalar(scale); return s;
+}
+
+function makeGridTex() {
+  const c = document.createElement('canvas'); c.width = c.height = 512;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#0b0f1c'; ctx.fillRect(0,0,512,512);
+  ctx.strokeStyle = 'rgba(50,70,130,0.22)'; ctx.lineWidth = 1;
+  for (let i=0;i<=512;i+=32) {
+    ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,512); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(512,i); ctx.stroke();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(8,8); return t;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  MAIN FLOOR
+// ─────────────────────────────────────────────────────────────
+const mainFloor = new THREE.Mesh(
+  new THREE.PlaneGeometry(80, 80),
+  new THREE.MeshStandardMaterial({ map: makeGridTex(), roughness: 0.92, metalness: 0.08 })
+);
+mainFloor.rotation.x = -Math.PI/2;
+mainFloor.receiveShadow = true;
+scene.add(mainFloor);
+
+// ─────────────────────────────────────────────────────────────
+//  BUILD ROOMS
+// ─────────────────────────────────────────────────────────────
+const deskPositions = {}; // squad.id → [{x,z}]
+
+SQUADS.forEach(sq => {
+  const { x, z } = sq.roomPos;
+  const { w, d } = sq.roomSize;
+  const col = new THREE.Color(sq.colorHex);
+
+  // Department floor patch
+  const patchMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(col.r*0.06, col.g*0.06, col.b*0.06),
+    roughness: 0.85, metalness: 0.2
+  });
+  const patch = new THREE.Mesh(new THREE.PlaneGeometry(w-0.4, d-0.4), patchMat);
+  patch.rotation.x = -Math.PI/2; patch.position.set(x, 0.008, z); patch.receiveShadow = true;
+  scene.add(patch);
+
+  // Glowing floor border
+  const edgeBox = new THREE.Box3(new THREE.Vector3(x-w/2, 0, z-d/2), new THREE.Vector3(x+w/2, 0, z+d/2));
+  const borderPts = [
+    new THREE.Vector3(x-w/2, 0.02, z-d/2), new THREE.Vector3(x+w/2, 0.02, z-d/2),
+    new THREE.Vector3(x+w/2, 0.02, z+d/2), new THREE.Vector3(x-w/2, 0.02, z+d/2),
+    new THREE.Vector3(x-w/2, 0.02, z-d/2),
+  ];
+  scene.add(new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(borderPts),
+    new THREE.LineBasicMaterial({ color: sq.color, transparent: true, opacity: 0.7 })
+  ));
+
+  // Glass walls — 4 panels
+  const wallH = 3.5, wallT = 0.1;
+  const wallMat = new THREE.MeshBasicMaterial({ color: sq.color, transparent: true, opacity: 0.12, side: THREE.DoubleSide });
+  const makeWall = (wx, wy, wz, ww, wh, wd) => {
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(ww, wh, wd), wallMat.clone());
+    wall.position.set(wx, wy, wz); scene.add(wall);
+  };
+  makeWall(x,       wallH/2, z-d/2, w,    wallH, wallT); // North
+  makeWall(x,       wallH/2, z+d/2, w,    wallH, wallT); // South
+  makeWall(x-w/2,   wallH/2, z,     wallT, wallH, d);    // West
+  makeWall(x+w/2,   wallH/2, z,     wallT, wallH, d);    // East
+
+  // Wall top edge glow line
+  const topEdgePts = [
+    new THREE.Vector3(x-w/2, wallH, z-d/2), new THREE.Vector3(x+w/2, wallH, z-d/2),
+    new THREE.Vector3(x+w/2, wallH, z+d/2), new THREE.Vector3(x-w/2, wallH, z+d/2),
+    new THREE.Vector3(x-w/2, wallH, z-d/2),
+  ];
+  scene.add(new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(topEdgePts),
+    new THREE.LineBasicMaterial({ color: sq.color, transparent: true, opacity: 0.4 })
+  ));
+
+  // Ceiling glow
+  const cg = glowSprite(makeGlowTex(sq.colorHex), w * 1.1, 0.12);
+  cg.position.set(x, 0.05, z); scene.add(cg);
+
+  // Desks + monitors
+  const desks = [];
+  deskPositions[sq.id] = desks;
+  const deskMat = new THREE.MeshStandardMaterial({ color: 0x141a2c, roughness: 0.8 });
+  const monMat  = new THREE.MeshBasicMaterial({ color: col.clone().multiplyScalar(0.7) });
+
+  const numDesks = sq.agents.length;
+  const margin = 2;
+  for (let i = 0; i < numDesks; i++) {
+    // Arrange desks in a rough grid inside the room
+    const cols = Math.ceil(Math.sqrt(numDesks));
+    const rows = Math.ceil(numDesks / cols);
+    const col_i = i % cols, row_i = Math.floor(i / cols);
+    const dx = x - (cols-1)*1.8/2 + col_i * 1.8 + (Math.random()-0.5)*0.3;
+    const dz = z - (rows-1)*1.8/2 + row_i * 1.8 + (Math.random()-0.5)*0.3;
+    const clampX = Math.max(x-w/2+margin, Math.min(x+w/2-margin, dx));
+    const clampZ = Math.max(z-d/2+margin, Math.min(z+d/2-margin, dz));
+
+    const desk = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.1, 0.65), deskMat);
+    desk.position.set(clampX, 0.05, clampZ); desk.castShadow = true; desk.receiveShadow = true;
+    scene.add(desk);
+
+    const mon = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.3, 0.04), monMat);
+    mon.position.set(clampX, 0.05 + 0.05 + 0.15, clampZ - 0.18);
+    scene.add(mon);
+
+    // Monitor glow
+    const mg = glowSprite(makeGlowTex(sq.colorHex), 0.5, 0.18);
+    mg.position.set(clampX, 0.3, clampZ - 0.18); scene.add(mg);
+
+    desks.push({ x: clampX, z: clampZ });
+  }
+
+  // Room name plate on floor (central)
+  const plateMat = new THREE.MeshBasicMaterial({ color: sq.color, transparent: true, opacity: 0.07 });
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(w*0.6, d*0.1), plateMat);
+  plate.rotation.x = -Math.PI/2; plate.position.set(x, 0.015, z); scene.add(plate);
+
+  // Ceiling lamp fixture
+  const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.15, 0.1, 8),
+    new THREE.MeshBasicMaterial({ color: sq.color }));
+  lampBase.position.set(x, 3.4, z); scene.add(lampBase);
+  scene.add(Object.assign(glowSprite(makeGlowTex(sq.colorHex), 4, 0.18), { position: new THREE.Vector3(x, 3.1, z) }));
+});
+
+// Corridors between Core and outer rooms (glowing floor strips)
+const corePos = SQUADS[0].roomPos;
+SQUADS.slice(1).forEach(sq => {
+  const pts = [
+    new THREE.Vector3(corePos.x, 0.012, corePos.z),
+    new THREE.Vector3(sq.roomPos.x, 0.012, sq.roomPos.z),
+  ];
+  scene.add(new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({ color: 0x223355, transparent: true, opacity: 0.35 })
+  ));
+});
+
+// ─────────────────────────────────────────────────────────────
+//  AGENT OBJECTS
+// ─────────────────────────────────────────────────────────────
+const agentObjects = [];
+
+SQUADS.forEach(sq => {
+  const desks = deskPositions[sq.id] || [];
+  sq.agents.forEach((agent, i) => {
+    const act   = agent.activity ?? 0.5;
+    const speed = 0.6 + act * 2.2; // units/sec
+    const agCol = new THREE.Color(sq.color).lerp(new THREE.Color(0xffffff), 0.3);
+
+    // Start at desk position or random
+    const desk = desks[i] || { x: sq.roomPos.x, z: sq.roomPos.z };
+    const startX = desk.x + (Math.random()-0.5)*0.3;
+    const startZ = desk.z + (Math.random()-0.5)*0.3;
+
+    // Body (cylinder pawn)
+    const body = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.11, 0.16, 0.44, 8),
+      new THREE.MeshStandardMaterial({ color: agCol, roughness: 0.3, metalness: 0.6, emissive: agCol, emissiveIntensity: 0.25 })
+    );
+    body.castShadow = true;
+
+    // Head
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.13, 8, 8),
+      new THREE.MeshStandardMaterial({ color: agCol, roughness: 0.2, metalness: 0.7, emissive: agCol, emissiveIntensity: 0.5 })
+    );
+    head.position.y = 0.32;
+
+    const group = new THREE.Group();
+    group.add(body); group.add(head);
+    group.position.set(startX, 0.22, startZ);
+
+    // Glow halo
+    const halo = glowSprite(makeGlowTex(sq.colorHex), 1.0, 0.55);
+    halo.position.y = 0.1; group.add(halo);
+
+    // Floor shadow
+    const floorGlow = glowSprite(makeGlowTex(sq.colorHex), 0.7, 0.2);
+    floorGlow.position.set(startX, 0.02, startZ); scene.add(floorGlow);
+
+    scene.add(group);
+
+    // Raycaster IDs
+    body.userData.isAgent = head.userData.isAgent = true;
+    body.userData.idx = head.userData.idx = agentObjects.length;
+
+    // Activity particles (floating notifications/emails)
+    const particles = [];
+    if (act > 0.55) {
+      const pCount = Math.ceil(act * 4);
+      for (let p = 0; p < pCount; p++) {
+        const ps = glowSprite(makeGlowTex(sq.colorHex), 0.18, 0.9);
+        ps.userData.phase  = Math.random() * Math.PI * 2;
+        ps.userData.speed  = 0.25 + Math.random() * 0.35;
+        ps.userData.ox     = (Math.random()-0.5) * 0.5;
+        ps.userData.oz     = (Math.random()-0.5) * 0.5;
+        group.add(ps); particles.push(ps);
+      }
+    }
+
+    agentObjects.push({
+      group, body, head, halo, floorGlow, particles,
+      agent, squad: sq, act, speed,
+      deskX: desk.x, deskZ: desk.z,
+      target: new THREE.Vector3(startX, 0.22, startZ),
+      wanderTimer: Math.random() * 4,
+      atDesk: false,
+    });
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+//  HTML LABELS
+// ─────────────────────────────────────────────────────────────
+const labelsDiv = document.createElement('div');
+labelsDiv.style.cssText = 'position:fixed;top:0;left:0;pointer-events:none;z-index:55;';
+document.body.appendChild(labelsDiv);
+
+const agentLabelEls = agentObjects.map(ao => {
+  const el = document.createElement('div'); el.className = 'agent-label';
+  el.innerHTML = `<span class="a-icon">${ao.agent.icon}</span><div class="a-name" style="color:${ao.squad.colorLight}">${ao.agent.name}</div><div class="a-role">${ao.agent.role}</div>`;
+  labelsDiv.appendChild(el); return el;
+});
+
+const deptLabelEls = SQUADS.map(sq => {
+  const el = document.createElement('div'); el.className = 'dept-label';
+  el.innerHTML = `<div class="d-name" style="color:${sq.colorLight}">${sq.roomName}</div><div class="d-sub" style="color:${sq.colorLight}">${sq.agents.length} agentes ativos</div>`;
+  labelsDiv.appendChild(el); return { el, sq };
+});
+
+document.getElementById('sv-agents').textContent = SQUADS.reduce((s,q) => s+q.agents.length, 0);
+document.getElementById('sv-squads').textContent  = SQUADS.length;
+
+// ─────────────────────────────────────────────────────────────
+//  INTERACTION
+// ─────────────────────────────────────────────────────────────
+const raycaster  = new THREE.Raycaster();
+const mouse      = new THREE.Vector2(-9999,-9999);
+const _v         = new THREE.Vector3();
+let   selectedAO = null;
+const clickTargets = agentObjects.flatMap(ao => [ao.body, ao.head]);
+
+canvas.addEventListener('mousemove', e => {
+  mouse.x =  (e.clientX/innerWidth)*2-1;
+  mouse.y = -(e.clientY/innerHeight)*2+1;
+  raycaster.setFromCamera(mouse, camera);
+  canvas.className = raycaster.intersectObjects(clickTargets).length ? 'hover' : '';
+});
+
+canvas.addEventListener('click', e => {
+  mouse.x =  (e.clientX/innerWidth)*2-1;
+  mouse.y = -(e.clientY/innerHeight)*2+1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(clickTargets);
+  if (hits.length) openCard(agentObjects[hits[0].object.userData.idx]);
+});
+
+function openCard(ao) {
+  selectedAO = ao;
+  document.getElementById('c-icon').textContent = ao.agent.icon;
+  document.getElementById('c-name').textContent = ao.agent.name;
+  document.getElementById('c-role').textContent = ao.agent.role;
+  document.getElementById('c-desc').textContent = ao.agent.desc;
+  const sqEl = document.getElementById('c-squad');
+  sqEl.textContent = ao.squad.name;
+  sqEl.style.background = ao.squad.colorHex + '22';
+  sqEl.style.color       = ao.squad.colorLight;
+  sqEl.style.border      = '1px solid ' + ao.squad.colorHex + '44';
+  document.getElementById('c-cmds').innerHTML = ao.agent.commands.map(c=>`<span class="cmd-tag">${c}</span>`).join('');
+  const pct = Math.round(ao.act * 100);
+  const barColor = ao.act < 0.5 ? `hsl(${120-ao.act*60},70%,50%)` : `hsl(${120-ao.act*120},80%,55%)`;
+  document.getElementById('c-act-fill').style.width      = pct + '%';
+  document.getElementById('c-act-fill').style.background = barColor;
+  document.getElementById('c-act-pct').textContent       = pct + '%';
+  document.getElementById('info-card').classList.add('open');
+}
+
+document.getElementById('close-card').addEventListener('click', () => {
+  document.getElementById('info-card').classList.remove('open'); selectedAO = null;
+});
+
+// ─────────────────────────────────────────────────────────────
+//  WANDER
+// ─────────────────────────────────────────────────────────────
+function pickTarget(ao) {
+  const sq = ao.squad;
+  const margin = 1.8;
+  // 30% chance: go to own desk; else wander room
+  if (Math.random() < 0.3) {
+    ao.target.set(ao.deskX, 0.22, ao.deskZ);
+    ao.wanderTimer = 2.5 + (1-ao.act) * 4;
+  } else {
+    const tx = sq.roomPos.x + (Math.random()-0.5) * (sq.roomSize.w - margin*2);
+    const tz = sq.roomPos.z + (Math.random()-0.5) * (sq.roomSize.d - margin*2);
+    ao.target.set(tx, 0.22, tz);
+    ao.wanderTimer = 0.8 + (1-ao.act) * 2 + Math.random() * 1.5;
+  }
+}
+agentObjects.forEach(ao => pickTarget(ao));
+
+// ─────────────────────────────────────────────────────────────
+//  COMM PULSES (inter-department messages)
+// ─────────────────────────────────────────────────────────────
+const commPulses = [];
+let nextPulseIn = 1.0;
+
+function spawnPulse() {
+  const core  = agentObjects.filter(ao => ao.squad.id === 'core');
+  const other = agentObjects.filter(ao => ao.squad.id !== 'core');
+  if (!core.length || !other.length) return;
+  const src = core[Math.floor(Math.random()*core.length)];
+  const dst = other[Math.floor(Math.random()*other.length)];
+  const sp = glowSprite(makeGlowTex(src.squad.colorHex), 0.28, 0.9);
+  scene.add(sp);
+  commPulses.push({ sp, src, dst, t: 0, dur: 0.5 + Math.random()*0.6 });
+}
+
+// ─────────────────────────────────────────────────────────────
+//  ANIMATE
+// ─────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const delta   = Math.min(clock.getDelta(), 0.05);
+  const elapsed = clock.elapsedTime;
+
+  agentObjects.forEach((ao, i) => {
+    // Wander timer
+    ao.wanderTimer -= delta;
+    if (ao.wanderTimer <= 0) pickTarget(ao);
+
+    // Move toward target
+    const dx = ao.target.x - ao.group.position.x;
+    const dz = ao.target.z - ao.group.position.z;
+    const dist = Math.sqrt(dx*dx + dz*dz);
+    if (dist > 0.08) {
+      const step = Math.min(ao.speed * delta, dist);
+      ao.group.position.x += (dx/dist) * step;
+      ao.group.position.z += (dz/dist) * step;
+      ao.group.rotation.y  = Math.atan2(dx, dz);
+    } else {
+      ao.wanderTimer = 0;
+    }
+
+    // Walking bobble — more active = faster
+    const bobFreq = 2.5 + ao.act * 4.5;
+    const moving  = dist > 0.1 ? 1 : 0;
+    ao.group.position.y = 0.22 + moving * Math.abs(Math.sin(elapsed * bobFreq + i * 0.7)) * 0.05 * ao.act;
+
+    // Glow breathe
+    const breathe    = 0.8 + 0.2 * Math.sin(elapsed * 1.8 + i * 0.9);
+    const isSelected = selectedAO === ao;
+    ao.halo.scale.setScalar(1.0 * breathe * (isSelected ? 2.8 : 1));
+    ao.halo.material.opacity = 0.5 * breathe * (isSelected ? 1.5 : 1);
+
+    // Floor glow follows agent
+    ao.floorGlow.position.x = ao.group.position.x;
+    ao.floorGlow.position.z = ao.group.position.z;
+
+    // Activity particles rise upward
+    ao.particles.forEach(ps => {
+      const ph = ps.userData.phase + elapsed * ps.userData.speed;
+      const rise = (ph * 0.28) % 1.4;
+      ps.position.set(
+        ps.userData.ox + Math.sin(ph * 1.5) * 0.18,
+        0.45 + rise,
+        ps.userData.oz + Math.cos(ph) * 0.18
+      );
+      ps.material.opacity = Math.sin(rise / 1.4 * Math.PI) * 0.75;
+    });
+
+    // Label projection
+    _v.setFromMatrixPosition(ao.group.matrixWorld); _v.y += 0.9;
+    _v.project(camera);
+    if (Math.abs(_v.x)>1.3 || Math.abs(_v.y)>1.3 || _v.z>1) {
+      agentLabelEls[i].style.opacity = '0';
+    } else {
+      agentLabelEls[i].style.opacity = '1';
+      agentLabelEls[i].style.left = ((_v.x*.5+.5)*innerWidth)  + 'px';
+      agentLabelEls[i].style.top  = ((-_v.y*.5+.5)*innerHeight) + 'px';
+    }
+  });
+
+  // Department labels
+  deptLabelEls.forEach(({ el, sq }) => {
+    _v.set(sq.roomPos.x, 0.3, sq.roomPos.z); _v.project(camera);
+    if (Math.abs(_v.x)>1.3 || Math.abs(_v.y)>1.3 || _v.z>1) { el.style.opacity='0'; return; }
+    el.style.opacity='1';
+    el.style.left=((_v.x*.5+.5)*innerWidth)+'px';
+    el.style.top=((-_v.y*.5+.5)*innerHeight+24)+'px';
+  });
+
+  // Comm pulses
+  nextPulseIn -= delta;
+  if (nextPulseIn <= 0) { spawnPulse(); nextPulseIn = 0.7 + Math.random() * 1.8; }
+
+  for (let i = commPulses.length-1; i >= 0; i--) {
+    const cp = commPulses[i];
+    cp.t += delta / cp.dur;
+    if (cp.t >= 1) { scene.remove(cp.sp); commPulses.splice(i,1); continue; }
+    const sp = cp.src.group.position, dp = cp.dst.group.position;
+    cp.sp.position.set(
+      sp.x + (dp.x-sp.x)*cp.t,
+      sp.y + (dp.y-sp.y)*cp.t + Math.sin(cp.t*Math.PI)*2.5,
+      sp.z + (dp.z-sp.z)*cp.t
+    );
+    cp.sp.material.opacity = Math.sin(cp.t*Math.PI)*0.95;
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

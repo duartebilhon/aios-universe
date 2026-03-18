@@ -80,6 +80,15 @@
     canvas:active { cursor: grabbing; }
     canvas.hover { cursor: pointer; }
 
+    #view-toggle {
+      position: fixed; top: 22px; left: 50%; transform: translateX(-50%);
+      display: flex; z-index: 200; pointer-events: all;
+      border: 1px solid rgba(120,160,255,0.2); border-radius: 10px; overflow: hidden;
+    }
+    .vt-btn { padding: 8px 20px; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: rgba(4,8,28,0.85); color: rgba(255,255,255,0.4); border: none; cursor: pointer; transition: all 0.25s; font-family: 'Inter', sans-serif; }
+    .vt-btn.active { background: rgba(80,120,255,0.25); color: white; }
+    .vt-btn:hover:not(.active) { background: rgba(80,120,255,0.12); color: rgba(255,255,255,0.7); }
+
     /* MOTION PANEL */
     #motion-panel {
       position: fixed;
@@ -116,6 +125,11 @@
 </head>
 <body>
 <canvas id="c"></canvas>
+
+<div id="view-toggle">
+  <button class="vt-btn active">🌌 Universo</button>
+  <button class="vt-btn" onclick="location.href='empresa.html'">🏢 Empresa</button>
+</div>
 
 <div id="header">
   <div>
