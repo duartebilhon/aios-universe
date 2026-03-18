@@ -261,6 +261,51 @@ const SQUADS = [
       { name: 'Ana', role: 'Analyst',         icon: '📈', activity: 0.48, desc: 'Analisa dados de produto, comportamento do usuário e gera insights para decisões estratégicas.', commands: ['/agents:analyst'] },
     ]
   },
+  {
+    id: 'design',
+    name: 'Design System',
+    position: { x: 0, y: 2, z: -20 },
+    color: 0xddaa00, colorHex: '#ddaa00', colorLight: '#ffcc44',
+    agents: [
+      { name: 'Chief-DS', role: 'DS Orchestrator',    icon: '🎨', activity: 0.72, desc: 'Orquestra o Design System AIOS. Roteia requests e garante consistência visual em todo ecossistema.', commands: ['/agents:design-chief'] },
+      { name: 'Brad',     role: 'DS Architect',       icon: '⚛️', activity: 0.68, desc: 'Atomic Design e refatoração de design systems. Padrões e componentes escaláveis.', commands: ['/agents:brad-frost'] },
+      { name: 'Dave',     role: 'DesignOps',          icon: '🔧', activity: 0.60, desc: 'Design Operations, escalabilidade de times e estruturação organizacional de design.', commands: ['/agents:dave-malouf'] },
+      { name: 'Dan',      role: 'DS Stakeholder',     icon: '🤝', activity: 0.55, desc: 'Venda interna do Design System, buy-in de stakeholders e processo Hot Potato.', commands: ['/agents:dan-mall'] },
+      { name: 'UX',       role: 'UX Expert',          icon: '🖌️', activity: 0.65, desc: 'Especialista em UX Design. Pesquisa, prototipação e validação de experiências.', commands: ['/agents:ux-design-expert'] },
+      { name: 'Token',    role: 'Token Architect',    icon: '🔑', activity: 0.70, desc: 'Transforma variáveis Figma em tokens de design. Governa o sistema de tokens AIOS.', commands: ['/agents:ds-token-architect'] },
+      { name: 'Found',    role: 'Foundations Lead',   icon: '🏛️', activity: 0.62, desc: 'Lidera as fundações do DS: tipografia, cores, espaçamento e grid.', commands: ['/agents:ds-foundations-lead'] },
+      { name: 'Story',    role: 'Storybook Expert',   icon: '📚', activity: 0.58, desc: 'Especialista em Storybook. Documenta e testa componentes isolados.', commands: ['/agents:storybook-expert'] },
+    ]
+  },
+  {
+    id: 'procustomer',
+    name: 'ProCustomer',
+    position: { x: -20, y: -1, z: 6 },
+    color: 0xff6611, colorHex: '#ff6611', colorLight: '#ff9944',
+    agents: [
+      { name: 'Bilhon',   role: 'CRM Specialist',    icon: '🏗️', activity: 0.75, desc: 'Especialista em implantação de CRM. Configura e otimiza processos de relacionamento com cliente.', commands: ['/agents:crm-bilhon'] },
+      { name: 'N8N',      role: 'N8N Integrator',    icon: '🔗', activity: 0.88, desc: 'Integrador N8N. Cria automações, workflows e conecta sistemas sem código.', commands: ['/agents:n8n-integrator'] },
+      { name: 'Gerente',  role: 'Customer Manager',  icon: '👥', activity: 0.80, desc: 'Gerencia ciclo de vida de clientes. Coordena onboarding, engajamento e retenção.', commands: ['/agents:customer-gerenciator'] },
+      { name: 'Criator',  role: 'Customer Creator',  icon: '✨', activity: 0.70, desc: 'Cria perfis e jornadas de cliente. Estrutura personas e segmentações.', commands: ['/agents:customer-criator'] },
+      { name: 'Whats',    role: 'WhatsApp Agent',    icon: '💬', activity: 0.92, desc: 'Agente WhatsApp 24/7. Atendimento automatizado, qualificação e follow-up via Evolution API.', commands: ['/agents:customer-whatsapp'] },
+    ]
+  },
+  {
+    id: 'specialops',
+    name: 'Special Ops',
+    position: { x: 20, y: 1, z: 6 },
+    color: 0x7799bb, colorHex: '#7799bb', colorLight: '#aaccee',
+    agents: [
+      { name: 'Vox',     role: 'TikTok Shop IA',    icon: '🎵', activity: 0.78, desc: 'Especialista em TikTok Shop IA. Opera Achados Virais e estratégia de conteúdo para e-commerce.', commands: ['/agents:vox'] },
+      { name: 'Banana',  role: 'AI Image Gen',      icon: '🍌', activity: 0.72, desc: 'Geração de imagens IA via Gemini/OpenRouter. Prompts estruturados SCDS, PRIO e BATCH.', commands: ['/agents:nano-banana-generator'] },
+      { name: 'Strat',   role: 'Sales Strategist',  icon: '📈', activity: 0.65, desc: 'Estrategista de vendas. Define playbooks, scripts e abordagens para diferentes mercados.', commands: ['/agents:sales-strategist'] },
+      { name: 'Bench',   role: 'Bench Comercial',   icon: '🪑', activity: 0.55, desc: 'Benchmarking comercial. Analisa concorrentes, preços e estratégias do mercado.', commands: ['/agents:bench-comercial'] },
+      { name: 'Studio',  role: 'Studio Agent',      icon: '🎬', activity: 0.70, desc: 'Agente de produção criativa. Coordena projetos de mídia, branding e campanhas visuais.', commands: ['/agents:studio'] },
+      { name: 'Nicola',  role: 'Ops Specialist',    icon: '🌟', activity: 0.60, desc: 'Especialista em operações especiais. Executa tarefas cross-squad e projetos pontuais.', commands: ['/agents:oalanicolas'] },
+      { name: 'Pedro',   role: 'Growth Hacker',     icon: '🎯', activity: 0.62, desc: 'Growth hacking e experimentação. Testa canais, mensagens e estratégias de crescimento.', commands: ['/agents:pedro-valerio'] },
+      { name: 'Finch',   role: 'Brand Strategist',  icon: '🦅', activity: 0.68, desc: 'Estrategista de marca. Define posicionamento, narrativa e identidade da marca AIOS.', commands: ['/agents:thiago-finch'] },
+    ]
+  },
 ];
 
 // ─────────────────────────────────────────────────────────────
@@ -273,6 +318,12 @@ const BRIDGES = [
   { from: { squad: 'core',      agent: 'Master' }, to: { squad: 'product',   agent: 'PM'     } },
   { from: { squad: 'comercial', agent: 'Duarte' }, to: { squad: 'content',   agent: 'Marco'  } },
   { from: { squad: 'dev',       agent: 'Dex'    }, to: { squad: 'product',   agent: 'PO'     } },
+  { from: { squad: 'core',        agent: 'Master' }, to: { squad: 'design',      agent: 'Chief-DS' } },
+  { from: { squad: 'core',        agent: 'Master' }, to: { squad: 'procustomer', agent: 'Gerente'  } },
+  { from: { squad: 'core',        agent: 'Master' }, to: { squad: 'specialops',  agent: 'Strat'    } },
+  { from: { squad: 'dev',         agent: 'Dex'    }, to: { squad: 'design',      agent: 'Token'    } },
+  { from: { squad: 'comercial',   agent: 'Duarte' }, to: { squad: 'procustomer', agent: 'Bilhon'   } },
+  { from: { squad: 'content',     agent: 'Marco'  }, to: { squad: 'specialops',  agent: 'Vox'      } },
 ];
 
 // ─────────────────────────────────────────────────────────────
@@ -402,6 +453,9 @@ nebula(  2,  3, 12, '#116644', 600, 8);   // dev — green
 nebula( -4, -2, 11, '#991144', 600, 8);   // product — red
 nebula(  0, -8,-14, '#112244', 400, 10);  // bg
 nebula(  6,  8, -8, '#220066', 300,  7);  // bg
+nebula(  0,  2,-20, '#665500', 700, 9);   // design — golden
+nebula(-20, -1,  6, '#883300', 600, 8);   // procustomer — orange
+nebula( 20,  1,  6, '#334455', 600, 8);   // specialops — steel blue
 
 // ─────────────────────────────────────────────────────────────
 //  SQUAD CORES
