@@ -465,7 +465,7 @@ SQUADS.forEach(sq => {
     agentObjects.push({
       grp, body, head, halo, fg, particles,
       agent, squad:sq, act,
-      speed: 0.10 + act * 0.35,
+      speed: 0.025 + act * 0.07,
       deskX:desk.x, deskZ:desk.z,
       tx:sx, tz:sz,
       wt: Math.random() * 3,
@@ -544,11 +544,11 @@ function pickTarget(ao) {
   const sq = ao.squad, m = 1.5;
   if (Math.random() < 0.28) {
     ao.tx = ao.deskX; ao.tz = ao.deskZ;
-    ao.wt = 6.0 + (1-ao.act)*8.0;
+    ao.wt = 15.0 + (1-ao.act)*20.0;
   } else {
     ao.tx = sq.rx + (Math.random()-0.5)*(sq.rw - m*2);
     ao.tz = sq.rz + (Math.random()-0.5)*(sq.rd - m*2);
-    ao.wt = 3.0 + (1-ao.act)*5.0 + Math.random()*3.0;
+    ao.wt = 8.0 + (1-ao.act)*12.0 + Math.random()*6.0;
   }
 }
 agentObjects.forEach(ao => pickTarget(ao));
@@ -595,7 +595,7 @@ function animate() {
 
     // Bobble
     const moving = dist > 0.1 ? 1 : 0;
-    ao.grp.position.y = 0.20 + moving * Math.abs(Math.sin(elapsed*(1.2+ao.act*2) + i)) * 0.03 * ao.act;
+    ao.grp.position.y = 0.20 + moving * Math.abs(Math.sin(elapsed*(0.5+ao.act*0.8) + i)) * 0.02 * ao.act;
 
     // Halo breathe
     const breathe = 0.8 + 0.2*Math.sin(elapsed*2 + i*0.8);
